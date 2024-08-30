@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\Query;
 
 /**
  * This is the model class for table "madeOf".
@@ -76,5 +77,78 @@ class MadeOf extends \yii\db\ActiveRecord
     public function getProduct()
     {
         return $this->hasOne(Prodcuct::class, ['id' => 'product_id']);
+    }
+
+    public static function queryPass()
+    {
+        return (new Query())
+            ->from('madeOf')
+            ->select([
+                'prodcuct.title as product',
+                'dish.title as dish',
+                'processing'
+            ])
+            ->innerJoin('prodcuct', 'madeOf.product_id = prodcuct.id')
+            ->innerJoin('dish', 'madeOf.dish_id = dish.id')
+            ->where(['processing' => 'пассировка'])
+        ;
+    }
+
+    public  static function queryCallor()
+    {
+        return (new Query())
+            ->from('madeOf')
+            ->select([
+                'prodcuct.title as product',
+                'dish.title as dish',
+                'dish.id as dish_id',
+                'callor',
+            ])
+            ->innerJoin('prodcuct', 'madeOf.product_id = prodcuct.id')
+            ->innerJoin('dish', 'madeOf.dish_id = dish.id')
+        ;
+    }
+
+    public  static function queryMax()
+    {
+        return //new Query())
+            //->from(
+
+            (new Query())
+            ->from('madeOf')
+            ->select([
+                'dish.title as dish',
+                'COUNT(prodcuct.id) as quantity'
+            ])
+            ->innerJoin('prodcuct', 'madeOf.product_id = prodcuct.id')
+            ->innerJoin('dish', 'madeOf.dish_id = dish.id')
+            ->where(['prodcuct.category' => 'овощи'])
+            ->groupBy(['dish.title'])
+            ->orderBy('quantity DESC')
+            ->limit(1)
+
+            //)
+            // ->select([
+            //     'dish',
+            //     'MAX(quantity) as quantity'
+            // ])
+            // ->groupBy('dish')
+        ;
+    }
+
+    public  static function queryCheckPerv()
+    {
+        return (new Query())
+            ->from('madeOf')
+            ->select([
+                'prodcuct.title as product',
+                'dish.title as dish',
+                'ochered',
+            ])
+            ->innerJoin('prodcuct', 'madeOf.product_id = prodcuct.id')
+            ->innerJoin('dish', 'madeOf.dish_id = dish.id')
+            ->where(['dish.category' => 'суп'])
+            ->orderBy('dish ASC, ochered ASC')
+        ;
     }
 }

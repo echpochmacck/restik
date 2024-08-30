@@ -9,6 +9,9 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\MadeOf;
+use GuzzleHttp\Psr7\Query;
+use yii\data\ActiveDataProvider;
 
 class SiteController extends Controller
 {
@@ -61,7 +64,7 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        return $this->render('index-blog');
     }
 
     /**
@@ -153,4 +156,119 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
+
+    public function actionCheckPass()
+    {
+        if (!Yii::$app->user->isGuest) {
+            $dataprovider = new ActiveDataProvider([
+                'query' => madeOf::queryPass(),
+
+            ]);
+            return $this->render('check-pass', [
+                'dataProvider' => $dataprovider
+            ]);
+        }
+    }
+
+    public function actionExportPass()
+    {
+        $data = madeOf::queryPass()
+            ->all();
+        $str = "Блюдо;Продукт;Процесс\r\n";
+        foreach ($data as $row) {
+            $str .= $row['dish'] . ';'
+                . $row['product'] . ';'
+                . $row['processing'] . "\r\n";
+        }
+        $str =  iconv('UTF-8', 'windows-1251', $str);
+        Yii::$app->response->sendContentAsFile($str, 'пассировка.csv');
+    }
+
+
+    public function actionCallor()
+    {
+        // var_dump('dsd');die;
+        if (!Yii::$app->user->isGuest) {
+            $dataprovider = new ActiveDataProvider([
+                'query' => madeOf::queryCallor(),
+
+            ]);
+            return $this->render('callor', [
+                'dataProvider' => $dataprovider
+            ]);
+        }
+    }
+
+    public function actionExportCallor()
+    {
+        $data = madeOf::queryCallor()
+            ->all();
+        $str = "Блюдо;Продукт;Каллории;Общая каллорийность\r\n";
+        foreach ($data as $row) {
+            $str .= $row['dish'] . ';'
+                . $row['product'] . ';'
+                . $row['callor'] . ';'
+                . MadeOf::find()
+                ->where(['madeOf.dish_id' => $row['dish_id']])
+                ->innerJoin('prodcuct', 'madeOf.product_id = prodcuct.id')
+                ->sum('callor') . "\r\n";
+        }
+        $str =  iconv('UTF-8', 'windows-1251', $str);
+        Yii::$app->response->sendContentAsFile($str, 'каллории.csv');
+    }
+
+    public function actionMax()
+    {
+        if (!Yii::$app->user->isGuest) {
+            $dataprovider = new ActiveDataProvider([
+                'query' => madeOf::queryMax(),
+                'pagination' => false,
+            ]);
+            return $this->render('max', [
+                'dataProvider' => $dataprovider
+            ]);
+        }
+    }
+
+    public function actionExportMax()
+    {
+        $data = madeOf::queryMax()
+            ->all();
+        $str = "Блюдо;КОличество продуктов\r\n";
+        foreach ($data as $row) {
+            $str .= $row['dish'] . ';'
+                . $row['quantity'] . "\r\n";
+        }
+        $str =  iconv('UTF-8', 'windows-1251', $str);
+        Yii::$app->response->sendContentAsFile($str, 'кол-во.csv');
+    }
+
+    public function actionCheck()
+    {
+        if (!Yii::$app->user->isGuest) {
+            $dataprovider = new ActiveDataProvider([
+                'query' => madeOf::queryCheckPerv(),
+                'pagination' => false,
+            ]);
+            return $this->render('check', [
+                'dataProvider' => $dataprovider
+            ]);
+        }
+    }
+
+    public function actionExportCheck()
+    {
+        $data = madeOf::queryCheckPerv()
+            ->all();
+        $str = "Блюдо;Пролукт очередь\r\n";
+        foreach ($data as $row) {
+            $str .= $row['dish'] . ';'
+                . $row['product'] . ';'
+
+                . $row['ochered'] . "\r\n";
+        }
+        $str =  iconv('UTF-8', 'windows-1251', $str);
+        Yii::$app->response->sendContentAsFile($str, 'кол-во.csv');
+    }
+
 }
